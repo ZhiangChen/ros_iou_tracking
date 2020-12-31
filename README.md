@@ -2,10 +2,10 @@
 A ROS package that applies multiple object tracking (MOT) to YOLO detection
 
 ## Requirements
-1. Realtime object detector  
+#### Realtime object detector  
 [leggedrobotics/darknet_ros](https://github.com/leggedrobotics/darknet_ros): A ROS package for YOLO detection
 
-2. Multiple objector tracker  
+#### Multiple objector tracker  
 Candidates:
 - [abewley/sort](https://github.com/abewley/sort): simple online realtime tracker  
 - [bochinski/iou-tracker](https://github.com/bochinski/iou-tracker)
