@@ -1,4 +1,4 @@
-# yolo_object_tracker
+# ros_iou_tracking
 A ROS package that applies object tracking to YOLO detection
 
 ## Requirements
