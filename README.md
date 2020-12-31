@@ -27,3 +27,5 @@ A ROS package that applies multiple object tracking (MOT) to YOLO detection
 (2) the frame rate should be high enough so the IoU thresholds are guaranteed between successive frames.  
 [The extended work](http://elvera.nue.tu-berlin.de/files/1547Bochinski2018.pdf) allows detection gaps by allowing bounding boxes that do not have new detections stay at the last position for several frames. Not only does it fill the detection gaps forward, it also does so backwards, which makes it less ideal for realtime tracking. Also, compared with SORT, predicting bounding box using Kalman filter that has considered the bounding box velocity is a better appoach to having undetected bounding box stay at the last position, when the camera motion is smooth.  
 
+## Acknowledgement
+[sort.py] is from [abewley/sort](https://github.com/abewley/sort)
