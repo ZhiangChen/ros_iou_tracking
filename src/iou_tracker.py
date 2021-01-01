@@ -55,7 +55,7 @@ class IoUTracker(object):
         """
         new_bboxes = data.bounding_boxes  # new_bboxes is a list of darknet_ros_msgs.msg.BoundingBox
         # get SORT bounding boxes
-
+        
         # update tracker. using get_matched argument in update() to support multi-class tracking
 
         # update current bounding boxes.
