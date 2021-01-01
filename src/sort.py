@@ -207,7 +207,7 @@ class Sort(object):
     self.trackers = []
     self.frame_count = 0
 
-  def update(self, dets=np.empty((0, 5)), get_matched=False):
+  def update(self, dets=np.empty((0, 5))):
     """
     Params:
       dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
@@ -231,7 +231,7 @@ class Sort(object):
       self.trackers.pop(t)
     matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets,trks, self.iou_threshold)
     """
-    e.g. matched: left-dets, right-tracker
+    e.g. matched: left-dets, right-trks
     unmatched_dets: unmatched dets
     unmatched_trks: unmatched trackers
     [[0 3]
@@ -263,14 +263,8 @@ class Sort(object):
         # remove dead tracklet
         if(trk.time_since_update > self.max_age):
           self.trackers.pop(i)
-    # zhiang: modified the following to support multi-class tracking
     if(len(ret)>0):
-      if get_matched:
-        return np.concatenate(ret), matched
       return np.concatenate(ret)
-
-    if get_matched:
-      return np.empty((0,5)), matched
     return np.empty((0,5))
 
 def parse_args():

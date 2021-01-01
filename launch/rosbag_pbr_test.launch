@@ -5,6 +5,10 @@
 		<!--remap from="/mavros/global_position/local" to="/gps/odom"/-->
 	</node>
 
+	<node name="drop_fps" pkg="topic_tools" type="drop" args="/darknet_ros/bounding_boxes 8 10" output="screen">
+		<!--remap from="/vio/odom" to="/mavros/odometry/in"/-->
+	</node>
+
 	<node name="iou_tracker_node" pkg="ros_iou_tracking" type="iou_tracker.py" output="screen">
 		<!--remap from="/vio/odom" to="/mavros/odometry/in"/-->
 	</node>
