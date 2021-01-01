@@ -47,9 +47,8 @@ class IoUTracker(object):
         self.image = np.zeros(1)
         self.raw_image_sub = rospy.Subscriber('/darknet_ros/detection_image', Image, self.__raw_image_callback, queue_size=1)
 
-        self.bbox_pub = rospy.Publisher("/iou_tracker/bounding_boxes_drop", BoundingBoxes, queue_size=1)
-        self.bbox_nn_sub = rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, self.__bbox_nn_callback,
-                                       queue_size=1)
+        self.bbox_pub = rospy.Publisher("/iou_tracker/bounding_boxes", BoundingBoxes, queue_size=1)
+        self.bbox_nn_sub = rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, self.__bbox_nn_callback, queue_size=1)
         rospy.loginfo("iou_tracker has been initialized!")
 
 
