@@ -138,8 +138,9 @@ class KalmanBoxTracker(object):
       self.kf.x[6] *= 0.0
     self.kf.predict()
     self.age += 1
-    if(self.time_since_update>0):
-      self.hit_streak = 0
+    # zhiang
+    #if(self.time_since_update>0):
+    #  self.hit_streak = 0
     self.time_since_update += 1
     self.history.append(convert_x_to_bbox(self.kf.x))
     return self.history[-1]
@@ -230,21 +231,7 @@ class Sort(object):
     for t in reversed(to_del):
       self.trackers.pop(t)
     matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets,trks, self.iou_threshold)
-    """
-    e.g. matched: left-dets, right-trks
-    unmatched_dets: unmatched dets
-    unmatched_trks: unmatched trackers
-    [[0 3]
-    [1 2]
-    [2 0]
-    [3 1]
-    [4 5]
-    [5 4]
-    [6 6]
-    [7 9]]
-    [8]
-    [ 7  8 10]
-    """
+
 
     # update matched trackers with assigned detections
     for m in matched:
@@ -257,7 +244,8 @@ class Sort(object):
     i = len(self.trackers)
     for trk in reversed(self.trackers):
         d = trk.get_state()[0]
-        if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
+        # zhiang
+        if (trk.time_since_update < self.max_age) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
           ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
         i -= 1
         # remove dead tracklet

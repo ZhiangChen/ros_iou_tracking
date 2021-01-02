@@ -27,7 +27,7 @@ from sort import Sort
 from sort import associate_detections_to_trackers
 
 class IoUTracker(object):
-    def __init__(self, max_age=50, min_hits=50, iou_threshold=0.3, display=False):
+    def __init__(self, max_age=20, min_hits=10, iou_threshold=0.3, display=False):
         """
         ROS IoU Tracker
         :param max_age: Maximum number of frames to keep alive a track without associated detections.
@@ -38,6 +38,7 @@ class IoUTracker(object):
         self.display = display
         self.bridge = CvBridge()
         self.tracked_img_pub = rospy.Publisher("/iou_tracker/detection_image", Image, queue_size=1)
+        self.new_bboxes = []
         self.bboxes = []
         self.bboxes_msg = BoundingBoxes()
         self.traces = dict()
@@ -65,17 +66,76 @@ class IoUTracker(object):
         :param data:
         :return:
         """
-        new_bboxes = data.bounding_boxes  # new_bboxes is a list of darknet_ros_msgs.msg.BoundingBox
+        self.new_bboxes = data.bounding_boxes  # new_bboxes is a list of darknet_ros_msgs.msg.BoundingBox
+
+
+    def __publish_tracking_image(self, image, bboxes):
+        Xs = copy.deepcopy(bboxes)
+        if len(image.shape) <= 2:
+            return
+        for x in Xs:
+            image = cv2.rectangle(image, (int(x.xmin), int(x.ymin)), (int(x.xmax), int(x.ymax)), (255, 255, 0), 2)
+
+        for k in self.traces:
+            trace = self.traces[k]
+            if len(trace) >= 200:
+                trace = trace[-200:]
+                self.traces[k] = trace
+            pts = copy.deepcopy(trace)
+            pts.reverse()
+            for i in range(1, len(pts)):
+                # if either of the tracked points are None, ignore them
+                if pts[i - 1] is None or pts[i] is None:
+                    continue
+                # otherwise, compute the thickness of the line and
+                # draw the connecting lines
+                buffer = 32
+                thickness = int(np.sqrt(buffer / float(i + 1)) * 2.5)
+                cv2.line(image, pts[i - 1], pts[i], (255, 255, 0), thickness)
+
+        image_msg = self.bridge.cv2_to_imgmsg(image, 'bgr8')
+        self.tracked_img_pub.publish(image_msg)
+
+    def __publish_bbox(self):
+        if len(self.bboxes) != 0:
+            if len(self.image.shape) > 2:
+                self.bboxes_msg.header = self.image_header
+                self.bboxes_msg.image_header = self.image_header
+                self.bboxes_msg.bounding_boxes = copy.deepcopy(self.bboxes)
+                self.bbox_pub.publish(self.bboxes_msg)
+
+    def __raw_image_callback(self, data):
+        self.image_header = data.header
+        raw_image = self.bridge.imgmsg_to_cv2(data).astype(np.uint8)
+        if len(raw_image.shape) <= 2:
+            return
+        self.image = raw_image
+
         # 1. get SORT bounding boxes
+
         new_bboxes_sort = []
-        for bbox in new_bboxes:
-            new_bboxes_sort.append(np.asarray((bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax, bbox.probability)))
+        if len(self.new_bboxes) != 0:
+            new_bboxes = copy.deepcopy(self.new_bboxes)
+            self.new_bboxes = []
+            for bbox in new_bboxes:
+                new_bboxes_sort.append(np.asarray((bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax, bbox.probability)))
+            new_bboxes_sort = np.asarray(new_bboxes_sort)
+            # 2. update tracker
+            trackers = self.mot_tracker.update(new_bboxes_sort)
+            matched, _, _ = associate_detections_to_trackers(new_bboxes_sort, trackers, 0.3)
 
-        new_bboxes_sort = np.asarray(new_bboxes_sort)
-        # 2. update tracker
-        trackers = self.mot_tracker.update(new_bboxes_sort)
+        else:
+            # 2. update tracker
+            trackers = self.mot_tracker.update()
+            if len(self.bboxes) == 0:
+                matched = np.empty((0, 2), dtype=int)
+            else:
+                new_bboxes = copy.deepcopy(self.bboxes)
+                for bbox in new_bboxes:
+                    new_bboxes_sort.append(np.asarray((bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax, bbox.probability)))
+                new_bboxes_sort = np.asarray(new_bboxes_sort)
+                matched, _, _ = associate_detections_to_trackers(new_bboxes_sort, trackers, 0.3)
 
-        matched, _, _ = associate_detections_to_trackers(new_bboxes_sort, trackers, 0.3)
 
         # 3. update current bounding boxes & extract tracking trace
         # 1). id is the id from tracker;
@@ -90,7 +150,7 @@ class IoUTracker(object):
                 bbox.id = tracker[4]
                 self.bboxes.append(bbox)
                 id = int(bbox.id)
-                center = (int((bbox.xmin + bbox.xmax)/2.), int((bbox.ymin + bbox.ymax)/2.))
+                center = (int((bbox.xmin + bbox.xmax) / 2.), int((bbox.ymin + bbox.ymax) / 2.))
                 if self.traces.get(id) == None:
                     self.traces[id] = [center]
                 else:
@@ -120,49 +180,7 @@ class IoUTracker(object):
         self.__publish_tracking_image(self.image, self.bboxes)
 
 
-    def __publish_tracking_image(self, image, bboxes):
-        Xs = copy.deepcopy(bboxes)
-        if len(image.shape) <= 2:
-            return
-        for x in Xs:
-            image = cv2.rectangle(image, (int(x.xmin), int(x.ymin)), (int(x.xmax), int(x.ymax)), (255, 255, 0), 2)
 
-        for k in self.traces:
-            trace = self.traces[k]
-            if len(trace) >= 200:
-                trace = trace[-200:]
-                self.traces[k] = trace
-            pts = copy.deepcopy(trace)
-            pts.reverse()
-            for i in range(1, len(pts)):
-                # if either of the tracked points are None, ignore
-                # them
-                if pts[i - 1] is None or pts[i] is None:
-                    continue
-                # otherwise, compute the thickness of the line and
-                # draw the connecting lines
-                buffer = 32
-                thickness = int(np.sqrt(buffer / float(i + 1)) * 2.5)
-                cv2.line(image, pts[i - 1], pts[i], (255, 255, 0), thickness)
-
-        image_msg = self.bridge.cv2_to_imgmsg(image, 'bgr8')
-        self.tracked_img_pub.publish(image_msg)
-
-
-    def __raw_image_callback(self, data):
-        self.image_header = data.header
-        raw_image = self.bridge.imgmsg_to_cv2(data).astype(np.uint8)
-        if len(raw_image.shape) > 2:
-            self.image = raw_image
-
-
-    def __publish_bbox(self):
-        if len(self.bboxes) != 0:
-            if len(self.image.shape) > 2:
-                self.bboxes_msg.header = self.image_header
-                self.bboxes_msg.image_header = self.image_header
-                self.bboxes_msg.bounding_boxes = copy.deepcopy(self.bboxes)
-                self.bbox_pub.publish(self.bboxes_msg)
 
 if __name__ == '__main__':
     rospy.init_node('iou_tracker', anonymous=False)
