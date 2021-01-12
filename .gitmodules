@@ -1,0 +1,3 @@
+[submodule "ros_cpu_status"]
+	path = ros_cpu_status
+	url = https://github.com/ZhiangChen/ros_cpu_status.git

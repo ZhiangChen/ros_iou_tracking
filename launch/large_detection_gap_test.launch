@@ -1,0 +1,18 @@
+<launch>
+	<param name="use_sim_time" value="true"/>
+
+	<node pkg="rosbag" type="play" name="rosbag" args="--clock -l /home/zhiang/catkin_ws/pbr2.bag">
+		<remap from="/darknet_ros/bounding_boxes" to="/bounding_boxes"/>
+	</node>
+
+	<node name="drop_fps" pkg="topic_tools" type="drop" args="/bounding_boxes 95 100" output="screen">
+		<remap from="/bounding_boxes_drop" to="/darknet_ros/bounding_boxes"/>
+	</node>
+
+	<!--node name="iou_tracker_node" pkg="ros_iou_tracking" type="iou_tracker.py" output="screen">
+		<remap to="/bounding_boxes_drop" from="/darknet_ros/bounding_boxes"/>
+	</node-->
+
+	<!--node pkg="rviz" type="rviz" name="rviz" output="screen"/-->
+
+</launch>

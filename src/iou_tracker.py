@@ -27,7 +27,7 @@ from sort import Sort
 from sort import associate_detections_to_trackers
 
 class IoUTracker(object):
-    def __init__(self, max_age=20, min_hits=10, iou_threshold=0.3, display=False):
+    def __init__(self, max_age=100, min_hits=80, iou_threshold=0.3):
         """
         ROS IoU Tracker
         :param max_age: Maximum number of frames to keep alive a track without associated detections.
@@ -35,7 +35,6 @@ class IoUTracker(object):
         :param iou_threshold: Minimum IOU for match.
         """
         self.iou_threshold = iou_threshold
-        self.display = display
         self.bridge = CvBridge()
         self.tracked_img_pub = rospy.Publisher("/iou_tracker/detection_image", Image, queue_size=1)
         self.new_bboxes = []
@@ -47,6 +46,7 @@ class IoUTracker(object):
                                 iou_threshold=iou_threshold)  # create instance of the SORT tracker
         self.image = np.zeros(1)
         self.raw_image_sub = rospy.Subscriber('/darknet_ros/detection_image', Image, self.__raw_image_callback, queue_size=1)
+        #self.raw_image_sub = rospy.Subscriber('/r200/depth/image_raw', Image, self.__raw_image_callback, queue_size=1)
 
         self.bbox_pub = rospy.Publisher("/iou_tracker/bounding_boxes", BoundingBoxes, queue_size=1)
         self.bbox_nn_sub = rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, self.__bbox_nn_callback, queue_size=1)
