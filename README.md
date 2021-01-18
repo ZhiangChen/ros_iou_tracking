@@ -34,6 +34,7 @@ roslaunch ros_iou_tracking rosbag_pbr_test.launch
 3. correct automatic annotations if necessary
 4. retrain YOLO with previous and augmented data
 
+
 ## Topics
 Node: /iou_tracker_node  
 Publications: 
