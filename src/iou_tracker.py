@@ -27,7 +27,7 @@ from sort import Sort
 from sort import associate_detections_to_trackers
 
 class IoUTracker(object):
-    def __init__(self, max_age=100, min_hits=80, iou_threshold=0.3):
+    def __init__(self, max_age=100, min_hits=10, iou_threshold=0.3):
         """
         ROS IoU Tracker
         :param max_age: Maximum number of frames to keep alive a track without associated detections.
