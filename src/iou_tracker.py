@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
     ros_iou_tracking
     Copyright 2021 Zhiang Chen
@@ -146,8 +146,9 @@ class IoUTracker(object):
         if trackers.shape[0] != 0:
             for tracker in trackers:
                 bbox = BoundingBox()
-                bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax = tracker[0], tracker[1], tracker[2], tracker[3]
-                bbox.id = tracker[4]
+                print(tracker)
+                bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax = int(tracker[0]), int(tracker[1]), int(tracker[2]), int(tracker[3])
+                bbox.id = int(tracker[4])
                 self.bboxes.append(bbox)
                 id = int(bbox.id)
                 center = (int((bbox.xmin + bbox.xmax) / 2.), int((bbox.ymin + bbox.ymax) / 2.))
